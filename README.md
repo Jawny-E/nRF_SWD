@@ -31,8 +31,28 @@ There are three main ways to make changes to this repository
 3. **Use Forks:** This is mostly used for major changes "when the intent is to create a independent project, which may never reunite". We strongly recommend that this is used when you want to change something fundamental in the project
 
 ### Comment your code <a name="comment"></a>
-This project has used the VS Code Extension "Better Comments - Aaron Bond" for the sake of readability. This may make some comments look irregular and strange in other IDEs, so we greatly suggest using this feature.
+This project has three main types of comments: section comments, function comments and clarifying comments. All shown under:
+'''cpp
+/***************************************************
+            Section: Function definitions
+****************************************************/
 
+
+/**@brief Function compares size of integers
+ * @param[in] int1 The first integer
+ * @param[in] int2 The second integer
+ * @return true if int1 is larger than int2
+ */
+int compare_integers(int int1, int int2){
+    if(int1 > int2){ //Compares the two values
+       return true;
+   }
+   else{
+       return false;
+   }
+}
+
+'''
 
 ## Guides <a name="guides"></a>
 ### Set-up Guide <a name="setup"></a>
