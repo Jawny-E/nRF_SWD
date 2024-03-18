@@ -32,7 +32,7 @@ There are three main ways to make changes to this repository
 
 ### Comment your code <a name="comment"></a>
 This project has three main types of comments: section comments, function comments and clarifying comments. All shown under:
-'''cpp
+```cpp
 /***************************************************
             Section: Function definitions
 ****************************************************/
@@ -52,7 +52,7 @@ int compare_integers(int int1, int int2){
    }
 }
 
-'''
+```
 
 ## Guides <a name="guides"></a>
 ### Set-up Guide <a name="setup"></a>
