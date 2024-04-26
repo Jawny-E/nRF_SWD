@@ -38,7 +38,7 @@ This project has three main types of comments: section comments, function commen
 ****************************************************/
 
 
-/* @brief Function compares size of integers
+/* Function compares size of integers
  * @param[in] int1 The first integer
  * @param[in] int2 The second integer
  * @return true if int1 is larger than int2
