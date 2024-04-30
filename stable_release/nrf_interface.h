@@ -14,31 +14,31 @@ Parameters:
 class NRF_IF{
   public:
     NRF_IF(int SWDCLK, int SWDIO, int SWD_CLK_HALFPERIOD, bool debug);
-    void nrf_test();
+    void begin_if(); //Begins the interface
+    void end_if(); //Ends the interface
 
-    void ctrl_erase_all();
-    void ctrl_reset();
-    void core_unhalt();
-    void core_halt();
-    void begin_if();
-    void end_if();
-    bool check_tasks();
+    void read_info(); //Reads FICR info from the nRF
+
+    uint8_t flash_file(uint32_t offset); // Flashes a file of .bin format consecutively beginning at the offset address
+
+  private:
     uint32_t read_port(uint8_t adrs, bool APnDP);
     void write_port(uint32_t data, uint8_t adrs, bool APnDP);
     uint32_t read_register(uint32_t adrs);
     void write_register(uint32_t data, uint32_t adrs);
 
-    void read_info();
-    void port_sel(bool nrf_port);
-    bool read_lockstate();
-    void soft_rst();
+    bool nvmc_write(uint32_t value, uint32_t adrs);
+    bool nvmc_erase_all(); //Unused
 
-    uint8_t nvmc_write(uint32_t value, uint32_t adrs);
-    uint8_t nvmc_erase_all();
-    uint8_t flash_file(uint32_t offset);
+    void ctrl_erase_all();
+    void ctrl_reset();
+    void core_unhalt();
+    void core_halt();
+
+    bool read_lockstate();
+    void port_sel(bool nrf_port);
     uint8_t write_bank(uint32_t buffer[], uint32_t adrs, int size);
 
-  private:
     SWD _swd;
     bool _debug;
 };

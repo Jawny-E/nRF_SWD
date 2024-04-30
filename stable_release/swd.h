@@ -1,7 +1,7 @@
 /*
-General SWD functions that can be used with a multitude of 
-components that support SWD
-Parameters:
+ * General SWD functions that can be used with a multitude of 
+   components that support SWD
+ * Parameters:
  * @SWDCLK: Pin for the clock 
  * @SWDIO: Pin for serial transfer
  * @SWD_CLK_HALFPERIOD: Half the clockperiod in microseconds
@@ -11,6 +11,13 @@ Parameters:
 
 class SWD{
   public:
+  /*
+   * SWD class function
+   * @SWDCLK: Pin number for clock connection
+   * @SWDIO: Pin number for serial(data) connection
+   * @SWD_CLK_HALFPERIOD: Half period of clock signal in microseconds, usually 5
+   * @debug: Turns on 
+   */
     SWD(int SWDCLK, int SWDIO, int SWD_CLK_HALFPERIOD, bool debug);
     void init(); // Setup pins
     uint32_t begin(); //Reads the id code

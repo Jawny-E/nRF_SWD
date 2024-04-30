@@ -1,24 +1,9 @@
+#pragma once
 #include "Arduino.h"
 #include "swd.h"
 #include "defines.h"
 
 bool stream_state = 0; // This  bool is 0 when writing and 1 while reading
-
-/* SWD Request Package
-    - Startbit 
-    - APnDP - This bit is 0 for an DPACC access, or 1 for a APACC access
-    - RnW -  This bit is 0 for an write access, or 1 for a read acces
-    - A[2:3] - two bits giving adress field, LSB first
-    - Parity bit for the preceding packet
-    - Stop bit
-    - Park
-    - Trn of one cycle
-    - ACK[0:2] LSB first
-    - Trn of one cycle
-    - WDATA [0:31] LSB first
-    - RDATA [0:31] LSB first
-    - Parity for data
-*/
 
 /***************************************************
             Section: Public functions
@@ -31,7 +16,9 @@ SWD::SWD(int SWDCLK, int SWDIO, int SWD_CLK_HALFPERIOD, bool debug){
   _debug = debug;
 }
 
-
+/*
+ * Sets up pins for SWD connection
+ */
 void SWD::init(){
   pinMode(_SWDCLK, OUTPUT);
   pinMode(_SWDIO, OUTPUT);
