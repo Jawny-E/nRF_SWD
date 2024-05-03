@@ -6,18 +6,18 @@
 #include <FS.h>
 #include <LittleFS.h>
 
-bool connection_status;
-bool nrf_lock_state;
-bool task_write_flash = false;
-bool task_read_flash = false;
-bool task_read_custom_data;
-uint32_t flash_offset;
 NRF_INFO nrf_ficr;
-
+bool has_been_erased = false;
 
 NRF_IF::NRF_IF(int SWDCLK, int SWDIO, int SWD_CLK_HALFPERIOD, bool debug) : _swd(SWDCLK, SWDIO, SWD_CLK_HALFPERIOD, 0){ 
   _debug = debug;
 }
+/***************************************************
+            Section: MaDChaSE functions
+****************************************************/
+
+
+
 
 /***************************************************
             Section: Public functions
@@ -53,42 +53,55 @@ void NRF_IF::read_info(){
  * Starts up an SWD-session, checks the DP-ID register
  * and requests startup of debug and system
  */
-void NRF_IF::begin_if(){
+bool NRF_IF::begin_if(){
   _swd.init();
   nrf_ficr.core_id = _swd.begin();
   if(nrf_ficr.core_id == 0x2ba01477){ //Standard Core-ID for nRF 52 devices
-    connection_status = true;
     uint32_t temp;
-    _swd.DP_write(0x0, DP_SELECT); //Choose AP0
-    _swd.DP_write(0x50000000, DP_CTRL); //Request debug powerup
-    _swd.DP_read(temp, DP_CTRL); //Check ack for request
+    _swd.DP_write(0x0, DP_SELECT);      //Choose AP0
+    _swd.DP_write(0x50000000, DP_CTRL); //Request debug and sys powerup
+    _swd.DP_read(temp, DP_CTRL);        //Check ack for request
     _swd.AP_write(0x23000052, MEM_AP_CSW);
+    core_halt();
+    read_info();
+    return true;
   }
   else{
     if(_debug){
       Serial.print("Unable to connect to device");
     }
-    connection_status = false;
+    return false;
   }
 }
 
 /*
  * Ends the interface session by ending the powerup requests
- SJEKK HER!!!!
+
  */
 void NRF_IF::end_if(){
-  _swd.DP_write(0x0, DP_CTRL); //Clear powerup request
+  uint32_t temp;
+  core_unhalt();
+  _swd.DP_write(0x0, DP_SELECT);      //Choose AP0
+  _swd.DP_write(0x0, DP_CTRL);        //Clear powerup request
+  _swd.DP_read(temp, DP_CTRL);        //Check ack for request
+  has_been_erased = false;
 }
 
-
-uint8_t NRF_IF::flash_file(uint32_t offset){
+/*
+ * Handles all operations needed to flash a .bin file to a 
+ */
+bool NRF_IF::flash_write_from_file(String filepath, uint32_t offset){
   if(_debug){
     Serial.print("Flashing file: ");
-    Serial.println(standard_filename);
+    Serial.println(filepath);
   }
-  File f = LittleFS.open(standard_filename, "r");
+  if(!has_been_erased){ // To turn of APPROTECT the chip must be erased before writing to flash
+    ctrl_erase_all();
+    has_been_erased = true;
+  }
+  File f = LittleFS.open(filepath, "r");
   if(f == 0){
-    return 0;
+    return false;
   }
   uint32_t file_size = f.size();
   uint8_t buffer[4096] = {0x00};
@@ -100,6 +113,32 @@ uint8_t NRF_IF::flash_file(uint32_t offset){
   }
   f.close();
   if(_debug) Serial.println("Completed flashing");
+  return true;
+}
+
+/*
+ * Handles all operations needed to read from flash memory
+ */
+bool NRF_IF::flash_read_to_file(String filepath, uint32_t byte_amount, uint32_t offset){
+  if(_debug){
+    Serial.printf("Reading %i bytes of flash to: ", byte_amount);
+    Serial.println(filepath);
+  }
+  if(LittleFS.exists(filepath)){
+    LittleFS.remove(filepath);
+  }
+  File f = LittleFS.open(filepath, "w");
+  if(f == 0){
+    return false;
+  }
+  uint8_t buffer[4096] = {0x00};
+  for(int position = 0; position < byte_amount; position += 4096){
+    uint32_t cur_len = (byte_amount - position) >= 4096 ? 4096 : byte_amount - position;
+    read_bank((uint32_t *)&buffer, position + offset, cur_len);
+    f.write(buffer, (size_t)cur_len);
+  }
+  f.close();
+  if(_debug) Serial.println("Completed reading Flash");
   return 1;
 }
 
@@ -225,11 +264,11 @@ bool NRF_IF::nvmc_erase_all(){
 
 /*
  * This function performs an ERASEALL command using Nordic Semiconductors CTRL-AP
+ * This erases: Flash memory, RAM, UICR and peripheral settings
  * More info at:
  * https://infocenter.nordicsemi.com/index.jsp?topic=%2Fnwp_027%2FWP%2Fnwp_027%2FnWP_027_erasing.html
  */
 void NRF_IF::ctrl_erase_all(){
-  Serial.println("Start Erase all");
   port_sel(1); // Select CTRL-AP 
   write_port(0x00000001, CTRL_AP_ERASEALL, 1); // Write 0x01 to ERASEALL register
   long timeout = millis();
@@ -237,7 +276,6 @@ void NRF_IF::ctrl_erase_all(){
     ;
   }
   write_port(0x0, CTRL_AP_ERASEALL, 1); // Write 0x0 to the ERASEALL register to complete sequence
-  Serial.println("End Eraseall");
   port_sel(0);
 }
 
@@ -252,16 +290,19 @@ void NRF_IF::ctrl_reset(){
 
 /*
  * Halts the CPU
- * More about operation:
+ * More about operation (Halt procedure):
  * https://devzone.nordicsemi.com/nordic/nordic-blog/b/blog/posts/serial-wire-debug-port-interface-for-nrf52832
  */
 void NRF_IF::core_halt(){
-  _swd.AP_write(0xa2000002, MEM_AP_CSW);
-  _swd.AP_write(0xe000edf0, MEM_AP_TAR);
+  port_sel(0);
+  uint32_t temp;
+  //_swd.AP_write(0xA2000002, MEM_AP_CSW);
+  _swd.AP_write(0xE000EDF0, MEM_AP_TAR);
   uint32_t retry = 200;
   while(retry--){
     _swd.AP_write(0xA05F0003, MEM_AP_DRW);
   }
+  _swd.DP_read(temp, DP_RDBUFF);
 }
 
 /*
@@ -271,6 +312,9 @@ void NRF_IF::core_halt(){
  */
 void NRF_IF::core_unhalt(){
   uint32_t temp;
+  uint32_t temp_check = 1;
+  port_sel(0);
+  /*Unhalt the core*/
   _swd.AP_write(0xE000EDFC, MEM_AP_TAR);
   _swd.AP_write(0x00000000, MEM_AP_DRW);
   _swd.DP_read(temp, DP_RDBUFF);
@@ -303,7 +347,10 @@ void NRF_IF::port_sel(bool nrf_port){
   _swd.DP_write(temp, DP_SELECT);
 }
 
-
+/*
+ * Writes 4096 bytes temporarily stored in a buffer
+ *
+ */
 bool NRF_IF::write_bank(uint32_t buffer[], uint32_t adrs, int buffersize){
   port_sel(0);
   uint32_t temp;
@@ -325,5 +372,23 @@ bool NRF_IF::write_bank(uint32_t buffer[], uint32_t adrs, int buffersize){
       ;
     }
   }
+  return 1;
+}
+
+bool NRF_IF::read_bank(uint32_t buffer[], uint32_t adrs, int size){
+  port_sel(0);
+  uint32_t temp;
+
+  _swd.AP_write(0xA2000012, MEM_AP_CSW);
+  _swd.AP_write(adrs, MEM_AP_TAR);
+  _swd.AP_read(temp, MEM_AP_DRW);
+
+  for(int position = 0; position < size; position += 4){
+    _swd.AP_read(temp, MEM_AP_DRW);
+    buffer[position / 4] = temp;
+  }
+  _swd.AP_write(0xA2000002, MEM_AP_CSW);
+  _swd.DP_read(temp, DP_RDBUFF);
+  _swd.DP_read(temp, DP_RDBUFF);
   return 1;
 }

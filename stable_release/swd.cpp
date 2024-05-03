@@ -56,11 +56,13 @@ bool SWD::DP_read(uint32_t& data, unsigned adress){
       if(check_parity(data) == temp_par){
         return true;
       }
+      else{
+        Serial.println("Parity Fault");
+        return false;
+      }
     }
   }
-  if(_debug){
-    Serial.println("DP read not ACKed");
-  }
+  if(_debug) Serial.println("DP read not ACKed");
   return false;
 }
 

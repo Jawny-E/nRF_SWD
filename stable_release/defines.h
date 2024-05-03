@@ -1,8 +1,12 @@
-//Pins
-//#define SWDIO 19
-//#define SWDCLK 21
-#define standard_filename "/firmware.bin"
+/* Feel free to Edit or replace these variables: */
+#define pin_SWDIO 19
+#define pin_SWDCLK 21
+#define STANDARD_FILENAME "/firmware.bin"
+#define YOUR_URL "http://192.168.177.143:8000/zephyr.bin"
+#define YOUR_SSID "ESP123"
+#define YOUR_PASSWORD "ESP321321"
 
+/* Be careful before editing these variables*/
 // Frequency and period
 #define SWDCLK_FREQ 200000
 #define SWDCLK_PERIOD 10
@@ -14,7 +18,7 @@
 #define DP_SELECT 0x08
 #define DP_RDBUFF 0x0C
 
-// nRF AP-registers
+// nRF CTRL AP-registers
 #define CTRL_AP_RESET 0x00
 #define CTRL_AP_ERASEALL 0x04
 #define CTRL_AP_ERASEALLSTAT 0x08
