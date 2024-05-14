@@ -19,10 +19,10 @@
 #define clockperiod 5
 #define debugging false
 const char* YOUR_FILENAME     = "/firmware.bin";   //Local storage for ESP32, dont edit this unless you know what youre doing
-const char* YOUR_MQTT_BROKER  = "192.168.203.143"; //IP for your mqtt broker
-const char* YOUR_SSID         = "ESP123";          //SSID for your network
-const char* YOUR_PASSWORD     = "ESP321321";       // Password for your network
-String YOUR_FIRMWARE_URL = "http://192.168.203.143:8000/zephyr.bin"; // The basic URL for your firmware, change as needed
+const char* YOUR_MQTT_BROKER  = "XXX.XXX.XXX.XXX"; //IP for your mqtt broker
+const char* YOUR_SSID         = "********";        //SSID for your network
+const char* YOUR_PASSWORD     = "********";        // Password for your network
+String YOUR_FIRMWARE_URL = "http://XXX.XXX.XXX.XXX:8000/zephyr.bin"; // The basic URL for your firmware, change as needed
 
 /* Example setup of the differnt interfaces */
 WL_IF wl(YOUR_SSID,YOUR_PASSWORD, YOUR_MQTT_BROKER, " ", " ", "UniqueName", YOUR_FILENAME, YOUR_FIRMWARE_URL, pin_SWDCLK , pin_SWDIO, clockperiod, debugging);
@@ -31,9 +31,9 @@ WL_IF wl(YOUR_SSID,YOUR_PASSWORD, YOUR_MQTT_BROKER, " ", " ", "UniqueName", YOUR
 
 void setup(){
   Serial.begin(115200);
-  wl.interface_init();
+  wl.interface_init(); // Start the Wireless interface
 }
 
 void loop() {
-  wl.interface_run();
+  wl.interface_run(); // Run the state machine of the wireless interface
 }

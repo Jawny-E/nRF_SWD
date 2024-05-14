@@ -1,0 +1,6 @@
+{
+    "board": "arduino:avr:uno",
+    "programmer": "avrisp",
+    "output": ".arduino/output",
+    "sketch": "project_main/nRF_SWD.ino"
+}
