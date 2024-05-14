@@ -88,6 +88,14 @@ The non-interfering measurement is a custom sequence that allows the ESP32 to re
 ### Howto<a name="HOWTO"></a>
 Okay, so you downloaded project_main and now you want to know how to set this up in the simplest possible way? Cool, me too. You will need a computer, a phone, an ESP32 and a nRF 52833dk to follow along this guide, but exchanges can be made!
 
+**Connect your nRF to your ESP32**
+
+There are a plethora of ways to both power the ESP32 and the nRF development kit. Since you're probably doing this for testing you might want to keep the ESP32 connected through it's USB port for debugging purposes, and then power the nRF through a 3.3V Power Supply. Alternativly there's options for using a 5V supply for powering both kits, keep in mind that this is untested. This setup leaves you with a connection diagram like this. The nRF devkit has been simplified into it's relevant components the Arduino header and the Debug Input.
+> Hint! You probably won't even need the Arduino Header, but it's used for our "non-interfering measurement" code
+
+![Connection Diagram](img/SWD-esp_2024-05-14.png)
+
+
 **WiFi**
 
 Setting everything up "the simple way" requires everything(your computer and your ESP32) to be on the same Wireless Network. For testing purposes I recommend setting up a 2.4GHz hotspot on your phone for this. 
@@ -161,6 +169,17 @@ C:\Program Files\mosquitto > mosquitto_pub.exe -t command -m FW
 ```
 > Hint! most .bin files must be uploaded with offset=0 so don't change it unless you know whats up
 
+**So, you want to make your own program for the nRF?**
+
+First of all I recommend going through the [Nordic Deveoplment Academy: SDK Fundamentals](https://academy.nordicsemi.com/courses/nrf-connect-sdk-fundamentals/) and follow their setup and installation guides. Then when you have made your first build lets find the .bin file. I should be located in your application folder -> build -> zephyr -> zephyr.bin. For simple projects like blinky and basic GPIO there will only be this .bin file as far as I've found. For more advnaced builds there might be more causing you issues. While I have not looked into this more spesifically than a couple of DevZone threads, you can use a tool such as srec_cat.exe to combine .bin files or use the full .hex file to create a "filled" .bin file.
+
+*Whats the difference between .hex and .bin?*
+
+So, a .bin file is in short terms a bunch of 0's and 1's in the same order as it will be stored in the flash memory. It only stores what goes into the memory, nothing about addresses. They therefore usually start at offset=0. However, if there is a looooong sequence of no-information the compiler might opt to skip ahead and create another .bin file starting at another offset. 
+The .hex file is usually larger, but it always contains all information about addresses and data. It has it's own format that needs to broken down before data can be written. You can find more about the [Intel Hex format here](https://developer.arm.com/documentation/ka003292/latest/). It also offers checksums and record types to keep file-transfer more secure
+
+>In summary: the .bin file is just a long sequence of data, whilst the .hex file stores all information about memory location alongside the data
+
 ## About the project <a name="about"></a>
 ### Coding Philosophy <a name="philosophy"></a>
 - All changes will be peer-reviewed before entering main, a pull-request must be approved or commented on by another user before merging
@@ -200,5 +219,6 @@ int compare_integers(int int1, int int2){
 
 ```
 
-### Credits <a name="CREDIT"></a>
-
+# Credits <a name="CREDIT"></a>
+- To [atc1441](https://github.com/atc1441) and other contributors for creating an awesome ESP32 SWD glitcher project! [The project](https://github.com/atc1441/ESP32_nRF52_SWD) has been a great inspiration for file-handling and how to make a SWD-library for the ESP32
+- To [Carsten Wulff](https://github.com/wulffern) for creating the [Nordic Distance toolbox example](https://github.com/wulffern/nrfdmiq). This inspired the "non-interfering measurement" sequence found in this project. The aim is that this sequence one day can work together with the DM-toolbox and SWD memory reading to create an IoT node. 
