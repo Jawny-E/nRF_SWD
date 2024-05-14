@@ -5,7 +5,9 @@ This project allows you to
 - Download this .bin file from an external http-server
 - Read the internal memory of the nRF into a .bin file (upload to server is not completed)
 - Erase the internal flash memory of the nRF
-- Complete a "non-interfering" measurement sequence, and then directly read the data from it's memory addresses using SWD
+- Complete a "non-interfering" measurement sequence, and then directly read the data from a pre-defined memory addresses using SWD
+
+The goal of this debugger is to eventually create a system of nodes that can update or change it's own firmware dependent on the current needs. The choice of ESP32 as a debugging unit is due to it's low threshold of use, common availibilty, active and diverse community and it's well documented application in other IoT projects. The target-device, nRF 52833 dk is chosen for it's capabilty in completeing distance measurements through Channel Sounding, which is a related project that might build on this one. The use of the Channel Sounding technique on the nRF also inspired the "non-interfering measurement" sequecne detailed below
 
 ## Table of contents
 1. [Project Guide](#project)
@@ -13,7 +15,7 @@ This project allows you to
     2. [Structure](#STRUCT)
     3. [Howto](#HOWTO)
 
-2. [About this project](#about)
+2. [Other info about this project](#about)
     1. [Coding Philosophy](#philosophy)
     2. [How to make changes](#chage)
     3. [Comment your code](#comment)
@@ -81,7 +83,11 @@ In this project you will also find three nRF 52833dk testcodes with their accomp
 
 *The non-interfering measurement*
 
-The non-interfering measurement is a custom sequence that allows the ESP32 to request a measurement from the nRF. The nRF then completes this measurement, stores the data in at a pre-defined SRAM register, and then signals to the ESP32 that the data can be read over SWD. The intended use for this is with the Nordic Distance Measurement library, which needs to run un-interrupted and preferrably needs a "start signal"
+The non-interfering measurement is a custom sequence that allows the ESP32 to request a measurement from the nRF. The nRF then completes this measurement, stores the data in at a pre-defined SRAM register, and then signals to the ESP32 that the data can be read over SWD. The intended use for this is with the Nordic Distance Measurement library, which needs to run un-interrupted and preferrably needs a "start signal". Under is a state-diagram showing how the digital logic of teh sequence plays out
+
+![State Diagram](img/non_interfering_.png)
+
+
 
 [A great example of how to use the dm-library in a similar way can be found here](https://github.com/wulffern/nrfdmiq)
 
@@ -112,7 +118,7 @@ Setting everything up "the simple way" requires everything(your computer and you
 
 If you have python installed on your computer setting up a simple HTTP server is luckily fairly simple. Underneath is a condensed version of [this tutorial](https://developer.mozilla.org/en-US/docs/Learn/Common_questions/Tools_and_setup/set_up_a_local_testing_server)
 1. Make sure your computer is connected to the same Wireless Network as your ESP32 will be
-2. Use cd to get to the folder where your .bin files are stored
+2. Use cd to get to the folder where your .bin files are stored. Feel free to use the .bin files found under doc :)
 ```shell
 $ cd ../Desktop/testfolder
 ```
@@ -180,7 +186,7 @@ The .hex file is usually larger, but it always contains all information about ad
 
 >In summary: the .bin file is just a long sequence of data, whilst the .hex file stores all information about memory location alongside the data
 
-## About the project <a name="about"></a>
+## Other info about the project <a name="about"></a>
 ### Coding Philosophy <a name="philosophy"></a>
 - All changes will be peer-reviewed before entering main, a pull-request must be approved or commented on by another user before merging
 - All changes must be well documented and commented before a peer-review
@@ -199,7 +205,7 @@ There are three main ways to make changes to this repository
 This project has three main types of comments: section comments, function comments and clarifying comments. All shown under:
 ```cpp
 /***************************************************
-            Section: Function definitions
+            Section: Public Function definitions
 ****************************************************/
 
 
@@ -220,5 +226,5 @@ int compare_integers(int int1, int int2){
 ```
 
 # Credits <a name="CREDIT"></a>
-- To [atc1441](https://github.com/atc1441) and other contributors for creating an awesome ESP32 SWD glitcher project! [The project](https://github.com/atc1441/ESP32_nRF52_SWD) has been a great inspiration for file-handling and how to make a SWD-library for the ESP32
+- To [atc1441](https://github.com/atc1441) and other contributors for creating an awesome ESP32 SWD glitcher project! [The project](https://github.com/atc1441/ESP32_nRF52_SWD) has been a great inspiration for file-handling and how to make a SWD-library system for the ESP32
 - To [Carsten Wulff](https://github.com/wulffern) for creating the [Nordic Distance toolbox example](https://github.com/wulffern/nrfdmiq). This inspired the "non-interfering measurement" sequence found in this project. The aim is that this sequence one day can work together with the DM-toolbox and SWD memory reading to create an IoT node. 
